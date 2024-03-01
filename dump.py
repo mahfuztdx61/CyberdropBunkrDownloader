@@ -42,7 +42,7 @@ def get_items_list(session, cdn_list, url, retries, extensions, only_export, cus
     for item in items:
         item = get_real_download_url(session, cdn_list, item['url'], is_bunkr)
         if item is None:
-            print(f"\t\t[-] Unable to find a download link")
+            print(f"\t\t[-] Unable to find a download link", flush=True)
             continue
 
         extension = get_url_data(item['url'])['extension']
@@ -52,7 +52,7 @@ def get_items_list(session, cdn_list, url, retries, extensions, only_export, cus
             else:
                 for i in range(1, retries + 1):
                     try:
-                        print(f"\t[+] Downloading {item['url']} (try {i}/{retries})")
+                        print(f"\t[+] Downloading {item['url']} (try {i}/{retries})", flush=True)
                         download(session, item['url'], download_path, is_bunkr, item['name'] if not is_bunkr else None)
                         break
                     except requests.exceptions.ConnectionError as e:
@@ -62,7 +62,7 @@ def get_items_list(session, cdn_list, url, retries, extensions, only_export, cus
                         else:
                             raise e
 
-    print(f"\t[+] File list exported in {os.path.join(download_path, 'url_list.txt')}" if only_export else f"\t[+] Download completed")
+    print(f"\t[+] File list exported in {os.path.join(download_path, 'url_list.txt')}" if only_export else f"\t[+] Download completed", flush=True)
     return
     
 def get_real_download_url(session, cdn_list, url, is_bunkr=True):
@@ -74,7 +74,7 @@ def get_real_download_url(session, cdn_list, url, is_bunkr=True):
 
     r = session.get(url)
     if r.status_code != 200:
-        print(f"\t[-] HTTP error {r.status_code} getting real url for {url}")
+        print(f"\t[-] HTTP error {r.status_code} getting real url for {url}", flush=True)
         return None
         
     if is_bunkr:
@@ -102,7 +102,7 @@ def get_real_download_url(session, cdn_list, url, is_bunkr=True):
 def get_cdn_file_url(session, cdn_list, gallery_url):
 
     if cdn_list is None:
-        print(f"\t[-] CDN list is empty unable to download {gallery_url}")
+        print(f"\t[-] CDN list is empty unable to download {gallery_url}", flush=True)
         return None
     
     for cdn in cdn_list:
@@ -113,10 +113,10 @@ def get_cdn_file_url(session, cdn_list, gallery_url):
         elif r.status_code == 404:
             continue
         elif r.status_code == 403:
-            print(f"\t\t[-] DDoSGuard blocked request to {gallery_url}, skipping")
+            print(f"\t\t[-] DDoSGuard blocked request to {gallery_url}, skipping", flush=True)
             return None
         else:
-            print(f"\t\t[-] HTTP Error {r.status_code} for {gallery_url}, skipping")
+            print(f"\t\t[-] HTTP Error {r.status_code} for {gallery_url}, skipping", flush=True)
             return None
         
     return None
@@ -129,10 +129,10 @@ def download(session, item_url, download_path, is_bunkr=False, file_name=None):
 
     with session.get(item_url, stream=True, timeout=5) as r:
         if r.status_code != 200:
-            print(f"\t[-] Error downloading \"{file_name}\": {r.status_code}")
+            print(f"\t[-] Error downloading \"{file_name}\": {r.status_code}", flush=True)
             return
         if r.url == "https://bnkr.b-cdn.net/maintenance.mp4":
-            print(f"\t[-] Error downloading \"{file_name}\": Server is down for maintenance")
+            print(f"\t[-] Error downloading \"{file_name}\": Server is down for maintenance", flush=True)
 
         file_size = int(r.headers.get('content-length', -1))
         with open(final_path, 'wb') as f:
@@ -145,7 +145,7 @@ def download(session, item_url, download_path, is_bunkr=False, file_name=None):
     if is_bunkr and file_size > -1:
         downloaded_file_size = os.stat(final_path).st_size
         if downloaded_file_size != file_size:
-            print(f"\t[-] {file_name} size check failed, file could be broken\n")
+            print(f"\t[-] {file_name} size check failed, file could be broken\n", flush=True)
             return
 
     mark_as_downloaded(item_url, download_path)
@@ -210,7 +210,7 @@ def mark_as_downloaded(item_url, download_path):
 def get_cdn_list(session):
     r = session.get('https://status.bunkr.ru/')
     if r.status_code != 200:
-        print(f"[-] HTTP Error {r.status_code} while getting cdn list")
+        print(f"[-] HTTP Error {r.status_code} while getting cdn list", flush=True)
         return None
     
     cdn_ret = []
